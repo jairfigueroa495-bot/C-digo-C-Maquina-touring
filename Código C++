@@ -1,0 +1,74 @@
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+enum Direccion { IZQ, DER };
+
+struct Transicion {
+    string estadoActual;
+    char simboloLectura;
+    string estadoSiguiente;
+    char simboloEscritura;
+    Direccion dirMov;
+};
+
+class MaquinaTuring {
+    string estadoActual;
+    int cabezal;
+    vector<char> cinta;
+    vector<Transicion> transiciones;
+
+public:
+    MaquinaTuring(string inicio, vector<Transicion> t, string entrada)
+        : estadoActual(inicio), transiciones(t), cabezal(0) {
+        cinta = vector<char>(entrada.begin(), entrada.end());
+        cinta.push_back('_');
+        cinta.push_back('_');
+    }
+
+    void ejecutar() {
+        while (true) {
+            bool aplicada = false;
+            for (const auto &tr : transiciones) {
+                if (tr.estadoActual == estadoActual && tr.simboloLectura == cinta[cabezal]) {
+                    cinta[cabezal] = tr.simboloEscritura;
+                    estadoActual = tr.estadoSiguiente;
+                    cabezal += (tr.dirMov == DER ? 1 : -1);
+                    aplicada = true;
+                    break;
+                }
+            }
+            if (!aplicada) break;
+        }
+
+        for (char &c : cinta) if (c == 'X') c = '1';
+        cout << "Estado final: " << estadoActual << endl;
+        cout << "Cinta final: ";
+        for (char c : cinta) cout << c;
+        cout << endl;
+    }
+};
+
+int main() {
+    vector<Transicion> t = {
+        {"Inicio", '1', "BuscarFin", 'X', DER},
+        {"Inicio", 'X', "Inicio", 'X', DER},
+        {"Inicio", '_', "AgregarExtra", '_', IZQ},
+        {"BuscarFin", '1', "BuscarFin", '1', DER},
+        {"BuscarFin", 'X', "BuscarFin", 'X', DER},
+        {"BuscarFin", '_', "AgregarCopia", '1', IZQ},
+        {"AgregarCopia", '1', "AgregarCopia", '1', IZQ},
+        {"AgregarCopia", 'X', "Inicio", 'X', DER},
+        {"AgregarExtra", '1', "AgregarExtra", '1', IZQ},
+        {"AgregarExtra", '_', "Fin", '1', DER}
+    };
+
+    string entrada;
+    cout << "Ingrese palabra (solo 1's): ";
+    cin >> entrada;
+
+    MaquinaTuring mt("Inicio", t, entrada);
+    mt.ejecutar();
+    return 0;
+}
